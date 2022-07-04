@@ -1,8 +1,11 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 use bevy_inspector_egui::Inspectable;
+use rand::Rng;
 
 use crate::{
-    PLAYERSPEED, TILESIZE, PLAYERSIZE, GameState,
+    PLAYERSPEED, TILESIZE, PLAYERSIZE, GameState, MINPROTECT, MAXPROTECT,
     ascii::{AsciiSheet, spawn_ascii_sprite},
     tilemap::{TileCollider, EncounterSpawner, Map},
 };
@@ -13,6 +16,8 @@ pub struct Player {
     just_moved: bool,
 }
 
+pub struct VulnerabilityTimer(Timer);
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -21,6 +26,7 @@ impl Plugin for PlayerPlugin {
             .add_system_set(SystemSet::on_enter(GameState::Overworld)
                 .with_system(show_player)
                 .with_system(show_map)
+                .with_system(set_encounter_timer)
             )
             .add_system_set(SystemSet::on_enter(GameState::Combat)
                 .with_system(hide_player)
@@ -32,20 +38,17 @@ impl Plugin for PlayerPlugin {
                 .with_system(player_movement.label("movement"))
                 .with_system(player_encounter_checking)
             )
-            .add_system_set(
-                SystemSet::on_update(GameState::Combat)
-                    .with_system(test_exit_combat)
-            )
+            .insert_resource(VulnerabilityTimer(Timer::from_seconds(MINPROTECT, false)))
             .add_startup_system(spawn_player);
     }
 }
 
-fn test_exit_combat(mut keyboard: ResMut<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
-    if keyboard.just_pressed(KeyCode::Space) {
-        println!("Changing to overworld");
-        state.set(GameState::Overworld).unwrap();
-        keyboard.clear();
-    }
+fn set_encounter_timer(mut timer: ResMut<VulnerabilityTimer>) {
+    let mut rng = rand::thread_rng();
+    let secs = rng.gen_range(MINPROTECT..MAXPROTECT);
+    println!("{}", secs);
+    timer.0.set_duration(Duration::from_secs_f32(secs));
+    timer.0.reset();
 }
 
 fn hide_map(
@@ -114,12 +117,18 @@ fn player_encounter_checking(
     player_query: Query<(&Player, &Transform)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
     mut state: ResMut<State<GameState>>,
+    mut timer: ResMut<VulnerabilityTimer>,
+    time: Res<Time>,
 ) {
     let (player, player_transform) = player_query.single();
-    if encounter_query.iter().any(|&transform| wall_collision_check(player_transform.translation, transform.translation))
-        && player.just_moved {
-        println!("Changing to combat!");
-        state.set(GameState::Combat).expect("Failed ot change states");
+    if player.just_moved
+        && encounter_query
+            .iter()
+            .any(|&transform| wall_collision_check(player_transform.translation, transform.translation)) {
+        if timer.0.tick(time.delta()).finished() {
+            println!("Changing to combat!");
+            state.set(GameState::Combat).expect("Failed ot change states");
+        }
     }
 }
 
