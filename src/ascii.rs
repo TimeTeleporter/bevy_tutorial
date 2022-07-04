@@ -1,6 +1,6 @@
 use bevy::{prelude::*};
 
-use crate::TILE_SIZE;
+use crate::TILESIZE;
 
 pub struct AsciiSheet(pub Handle<TextureAtlas>);
 
@@ -21,7 +21,7 @@ pub fn spawn_ascii_sprite(
 ) -> Entity {
     let mut sprite = TextureAtlasSprite::new(index); // A smiley face
     sprite.color = color;
-    sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
+    sprite.custom_size = Some(Vec2::splat(TILESIZE));
 
     commands
         .spawn_bundle(SpriteSheetBundle {

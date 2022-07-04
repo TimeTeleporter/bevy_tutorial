@@ -10,9 +10,10 @@ const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 const RESOLUTION: f32 = 16.0 / 9.0;
 const WINDOWHEIGHT: f32 = 720.;
 
-pub const TILE_SIZE: f32 = 0.1;
+pub const TILESIZE: f32 = 0.1;
 pub const PLAYERSPEED: f32 = 5.0;
-pub const PLAYER_SIZE: f32 = 0.9;
+pub const PLAYERSIZE: f32 = 0.9;
+pub const ENCOUNTERWINDOW: f32 = 10.0;
 
 mod player;
 mod debug;
@@ -24,10 +25,17 @@ use debug::DebugPlugin;
 use ascii::AsciiPlugin;
 use tilemap::TileMapPlugin;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum GameState {
+    Overworld,
+    Combat,
+}
+
 fn main() {
     let height: f32 = WINDOWHEIGHT;
 
     App::new()
+        .add_state(GameState::Overworld)
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(WindowDescriptor {
             width: height * RESOLUTION,

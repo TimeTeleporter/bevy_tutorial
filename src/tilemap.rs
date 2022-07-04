@@ -2,18 +2,26 @@ use std::{fs::File, io::{BufReader, BufRead}};
 
 use bevy::prelude::*;
 
-use crate::{ascii::{AsciiSheet, spawn_ascii_sprite}, TILE_SIZE};
+use crate::{ascii::{AsciiSheet, spawn_ascii_sprite}, TILESIZE};
 
 pub struct TileMapPlugin;
-
-#[derive(Component)]
-pub struct TileCollider;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(create_simple_map);
     }
 }
+
+#[derive(Component)]
+pub struct Map;
+
+#[derive(Component)]
+pub struct EncounterSpawner;
+
+
+#[derive(Component)]
+pub struct TileCollider;
+
 
 fn create_simple_map(mut commands: Commands, ascii: Res<AsciiSheet>) {
     let file = File::open("assets/map.txt").expect("No map file found");
@@ -27,11 +35,14 @@ fn create_simple_map(mut commands: Commands, ascii: Res<AsciiSheet>) {
                     &ascii,
                     char as usize,
                     Color::rgb(0.9, 0.9, 0.9),
-                    Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 100.0)
+                    Vec3::new(x as f32 * TILESIZE, -(y as f32) * TILESIZE, 100.0)
                 );
                 if char == '#' {
                     commands.entity(tile)
                         .insert(TileCollider);
+                }
+                if char == '~' {
+                    commands.entity(tile).insert(EncounterSpawner);
                 }
                 tiles.push(tile);
             }
@@ -41,6 +52,7 @@ fn create_simple_map(mut commands: Commands, ascii: Res<AsciiSheet>) {
     // Create map entity
     commands.spawn()
         .insert(Name::new("Map"))
+        .insert(Map)
         .insert(Transform::default())
         .insert(GlobalTransform::default())
         .push_children(&tiles);
