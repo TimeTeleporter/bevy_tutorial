@@ -3,11 +3,13 @@
 use bevy::{
     prelude::*, 
     render::camera::ScalingMode, 
-    window::PresentMode
+    window::PresentMode,
 };
 
-pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
-pub const RESOLUTION: f32 = 16.0 / 9.0;
+const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
+const RESOLUTION: f32 = 16.0 / 9.0;
+const WINDOWHEIGHT: f32 = 720.;
+
 pub const TILE_SIZE: f32 = 0.1;
 pub const PLAYERSPEED: f32 = 5.0;
 pub const PLAYER_SIZE: f32 = 0.9;
@@ -23,7 +25,7 @@ use ascii::AsciiPlugin;
 use tilemap::TileMapPlugin;
 
 fn main() {
-    let height: f32 = 720.;
+    let height: f32 = WINDOWHEIGHT;
 
     App::new()
         .insert_resource(ClearColor(CLEAR))
