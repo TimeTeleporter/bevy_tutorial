@@ -4,14 +4,6 @@ use bevy::prelude::*;
 
 use crate::{ascii::{AsciiSheet, spawn_ascii_sprite}, TILESIZE};
 
-pub struct TileMapPlugin;
-
-impl Plugin for TileMapPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(create_simple_map);
-    }
-}
-
 #[derive(Component)]
 pub struct Map;
 
@@ -21,6 +13,23 @@ pub struct EncounterSpawner;
 
 #[derive(Component)]
 pub struct TileCollider;
+
+pub struct TileMapPlugin;
+
+impl Plugin for TileMapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(create_simple_map);
+    }
+}
+
+fn color_system(
+    mut commands: Commands,
+    mut fence_query: Query<&mut TextureAtlasSprite, With<TileCollider>>
+) {
+    for mut sprite in fence_query.iter_mut() {
+        sprite.color = Color::RED;
+    }
+}
 
 
 fn create_simple_map(mut commands: Commands, ascii: Res<AsciiSheet>) {

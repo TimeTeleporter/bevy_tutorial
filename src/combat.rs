@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::{GameState,
         ascii::{AsciiSheet, spawn_ascii_sprite}, 
@@ -93,9 +94,71 @@ fn combat_camera(mut camera_query: Query<&mut Transform, With<Camera>>) {
 }
 
 fn spawn_enemy(commands: Commands, asset_server: Res<AssetServer>) {
-    let (name, hp) = spawn_rehu(commands, asset_server);
+    const CHOICES: usize = 3;
+
+    let choice = rand::thread_rng().gen_range(0..CHOICES);
+
+    let (name, hp): (&str, isize) = match choice {
+        0 => { spawn_rehu(commands, asset_server) },
+        1 => { spawn_imi(commands, asset_server) },
+        _ => { spawn_mibi(commands, asset_server)}
+    };
     
         println!("A wild {} appears! It has {} hp.", name, hp);
+}
+
+fn spawn_mibi<'a>(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) -> (&'a str, isize) {
+    let name = "Mibi";
+    let hp = 1;
+
+    commands.spawn_bundle(SpriteBundle {
+            texture: asset_server.load("mibi.png"),
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.2, 0.0),
+                scale: Vec3::new(0.001, 0.001, 1.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Enemy)
+        .insert(Name::new(name))
+        .insert(CombatStats {
+            health: hp,
+            max_health: 3,
+            attack: 2,
+            defense: 1,
+        });
+    (name, hp)
+}
+
+fn spawn_imi<'a>(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) -> (&'a str, isize) {
+    let name = "Imi";
+    let hp = 3;
+
+    commands.spawn_bundle(SpriteBundle {
+            texture: asset_server.load("imi.png"),
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.2, 0.0),
+                scale: Vec3::new(0.001, 0.001, 1.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Enemy)
+        .insert(Name::new(name))
+        .insert(CombatStats {
+            health: hp,
+            max_health: 3,
+            attack: 2,
+            defense: 1,
+        });
+    (name, hp)
 }
 
 fn spawn_rehu<'a>(
@@ -103,7 +166,7 @@ fn spawn_rehu<'a>(
     asset_server: Res<AssetServer>,
 ) -> (&'a str, isize) {
     let name = "Rehu";
-    let hp = 3;
+    let hp = 5;
 
     commands.spawn_bundle(SpriteBundle {
             texture: asset_server.load("rehu.png"),
