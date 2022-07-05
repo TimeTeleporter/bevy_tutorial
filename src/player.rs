@@ -7,7 +7,7 @@ use rand::Rng;
 use crate::{
     PLAYERSPEED, TILESIZE, PLAYERSIZE, GameState, MINPROTECT, MAXPROTECT,
     ascii::{AsciiSheet, spawn_ascii_sprite},
-    tilemap::{TileCollider, EncounterSpawner, Map}, fadeout::{create_fadeout, FadeoutTimer},
+    tilemap::{TileCollider, EncounterSpawner, Map}, fadeout::{create_fadeout, FadeoutTimer}, combat::CombatStats,
 };
 
 #[derive(Component, Inspectable)]
@@ -119,7 +119,7 @@ fn player_encounter_checking(
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
     ascii: Res<AsciiSheet>,
     mut timer: ResMut<VulnerabilityTimer>,
-    timer2: ResMut<FadeoutTimer>,
+    mut timer2: ResMut<FadeoutTimer>,
     time: Res<Time>,
 ) {
     let (player, player_transform) = player_query.single();
@@ -128,7 +128,7 @@ fn player_encounter_checking(
             .iter()
             .any(|&transform| wall_collision_check(player_transform.translation, transform.translation)) {
         if timer.0.tick(time.delta()).just_finished() {
-            create_fadeout(&mut commands, GameState::Combat, &ascii, timer2);
+            create_fadeout(&mut commands, GameState::Combat, &ascii, &mut timer2);
             println!("Changing to combat!");
         }
     }
@@ -227,6 +227,12 @@ fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
         .insert(Player {
             speed: PLAYERSPEED,
             just_moved: false,
+        })
+        .insert(CombatStats {
+            health: 10,
+            max_health: 10,
+            attack: 2,
+            defense: 1,
         })
         .id();
 

@@ -13,8 +13,8 @@ const WINDOWHEIGHT: f32 = 1080.;
 pub const TILESIZE: f32 = 0.1;
 pub const PLAYERSPEED: f32 = 2.5;
 pub const PLAYERSIZE: f32 = 0.9;
-pub const MINPROTECT: f32 = 1.0; // The duration in which the player is protected from encounters.
-pub const MAXPROTECT: f32 = 7.0;
+pub const MINPROTECT: f32 = 0.5; // The duration in which the player is protected from encounters.
+pub const MAXPROTECT: f32 = 3.0;
 
 mod player;
 mod debug;
@@ -22,6 +22,7 @@ mod ascii;
 mod tilemap;
 mod combat;
 mod fadeout;
+mod kolleg;
 
 use player::PlayerPlugin;
 use debug::DebugPlugin;
@@ -29,6 +30,7 @@ use ascii::AsciiPlugin;
 use tilemap::TileMapPlugin;
 use combat::CombatPlugin;
 use fadeout::FadeoutPlugin;
+use kolleg::KollegPlugin;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum GameState {
@@ -58,6 +60,7 @@ fn main() {
         .add_plugin(TileMapPlugin)
         .add_plugin(CombatPlugin)
         .add_plugin(FadeoutPlugin)
+        .add_plugin(KollegPlugin)
         .run();
 }
 
