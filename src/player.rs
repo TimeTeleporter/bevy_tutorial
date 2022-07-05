@@ -7,7 +7,7 @@ use rand::Rng;
 use crate::{
     PLAYERSPEED, TILESIZE, PLAYERSIZE, GameState, MINPROTECT, MAXPROTECT,
     ascii::{AsciiSheet, spawn_ascii_sprite},
-    tilemap::{TileCollider, EncounterSpawner, Map},
+    tilemap::{TileCollider, EncounterSpawner, Map}, fadeout::{create_fadeout, FadeoutTimer},
 };
 
 #[derive(Component, Inspectable)]
@@ -34,8 +34,8 @@ impl Plugin for PlayerPlugin {
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Overworld)
-                .with_system(camera_follow.after("movement"))
-                .with_system(player_movement.label("movement"))
+                .with_system(camera_follow.after(player_movement))
+                .with_system(player_movement)
                 .with_system(player_encounter_checking)
             )
             .insert_resource(VulnerabilityTimer(Timer::from_seconds(MINPROTECT, false)))
@@ -114,10 +114,12 @@ fn change_player_visability(
 }
 
 fn player_encounter_checking(
+    mut commands: Commands,
     player_query: Query<(&Player, &Transform)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
-    mut state: ResMut<State<GameState>>,
+    ascii: Res<AsciiSheet>,
     mut timer: ResMut<VulnerabilityTimer>,
+    timer2: ResMut<FadeoutTimer>,
     time: Res<Time>,
 ) {
     let (player, player_transform) = player_query.single();
@@ -125,9 +127,9 @@ fn player_encounter_checking(
         && encounter_query
             .iter()
             .any(|&transform| wall_collision_check(player_transform.translation, transform.translation)) {
-        if timer.0.tick(time.delta()).finished() {
+        if timer.0.tick(time.delta()).just_finished() {
+            create_fadeout(&mut commands, GameState::Combat, &ascii, timer2);
             println!("Changing to combat!");
-            state.set(GameState::Combat).expect("Failed ot change states");
         }
     }
 }
@@ -153,21 +155,29 @@ fn player_movement(
 
     player.just_moved = false;
 
+    let mut sprintmodifier: f32 = 1.0;
+    if keyboard.pressed(KeyCode::LShift) {
+        sprintmodifier = 2.0;
+    }
+
+
     let mut delta_y: f32 = 0.0;
     let mut delta_x: f32 = 0.0;
 
     if keyboard.pressed(KeyCode::W) {
-        delta_y += player.speed * TILESIZE * time.delta_seconds();
+        delta_y += player.speed * TILESIZE * time.delta_seconds() * sprintmodifier;
     }
     if keyboard.pressed(KeyCode::S) {
-        delta_y += -player.speed  * TILESIZE * time.delta_seconds();
+        delta_y += -player.speed  * TILESIZE * time.delta_seconds() * sprintmodifier;
     }
     if keyboard.pressed(KeyCode::A) {
-        delta_x += -player.speed * TILESIZE * time.delta_seconds();
+        delta_x += -player.speed * TILESIZE * time.delta_seconds() * sprintmodifier;
     }
     if keyboard.pressed(KeyCode::D) {
-        delta_x += player.speed * TILESIZE * time.delta_seconds();
+        delta_x += player.speed * TILESIZE * time.delta_seconds() * sprintmodifier;
     }
+
+    
 
     let target = transform.translation + Vec3::new(delta_x, 0.0, 0.0);
 
